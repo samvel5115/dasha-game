@@ -1,0 +1,139 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Даша: Успей догнать автобус</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: linear-gradient(to top, #a2d9ff 60%, #ffffff);
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas"></canvas>
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const dashaImg = new Image();
+    dashaImg.src = "dasha_sprite_clean.png";
+
+    const busImg = new Image();
+    busImg.src = "bus_sprite_clean.png";
+
+    const dasha = {
+      x: 50,
+      y: canvas.height - 180,
+      width: 80,
+      height: 80,
+      speed: 5
+    };
+
+    const bus = {
+      x: canvas.width - 250,
+      y: canvas.height - 190,
+      width: 180,
+      height: 100,
+      speed: 2
+    };
+
+    const obstacles = [
+      { x: 400, y: canvas.height - 120, width: 60, height: 60, type: "dog" },
+      { x: 600, y: canvas.height - 130, width: 60, height: 80, type: "babushka" }
+    ];
+
+    const keys = {};
+    let gameOver = false;
+    let gameWin = false;
+
+    window.addEventListener("keydown", (e) => {
+      keys[e.key] = true;
+    });
+    window.addEventListener("keyup", (e) => {
+      keys[e.key] = false;
+    });
+
+    function drawBackground() {
+      ctx.fillStyle = "#87ceeb";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#e0e0e0";
+      ctx.fillRect(0, canvas.height - 100, canvas.width, 100);
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawBackground();
+
+      ctx.drawImage(busImg, bus.x, bus.y, bus.width, bus.height);
+      ctx.drawImage(dashaImg, dasha.x, dasha.y, dasha.width, dasha.height);
+
+      obstacles.forEach((obs) => {
+        ctx.fillStyle = obs.type === "babushka" ? "purple" : "brown";
+        ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+      });
+    }
+
+    function update() {
+      if (keys["ArrowRight"] || keys["d"]) {
+        dasha.x += dasha.speed;
+      }
+      if (keys["ArrowLeft"] || keys["a"]) {
+        dasha.x -= dasha.speed;
+      }
+      if (keys["ArrowUp"] || keys["w"]) {
+        dasha.y -= dasha.speed;
+      }
+      if (keys["ArrowDown"] || keys["s"]) {
+        dasha.y += dasha.speed;
+      }
+
+      bus.x -= bus.speed;  // Автобус уезжает
+
+      if (dasha.x + dasha.width >= bus.x && dasha.y < bus.y + bus.height && dasha.y + dasha.height > bus.y) {
+        gameWin = true;
+        alert("Ты догнала автобус! 🎉");
+      }
+
+      if (bus.x < -bus.width) {
+        gameOver = true;
+        alert("Автобус уехал! 😢");
+      }
+
+      // Проверка на столкновение с препятствиями
+      obstacles.forEach((obs) => {
+        if (
+          dasha.x < obs.x + obs.width &&
+          dasha.x + dasha.width > obs.x &&
+          dasha.y < obs.y + obs.height &&
+          dasha.y + dasha.height > obs.y
+        ) {
+          gameOver = true;
+          alert("Ты столкнулась с препятствием!");
+        }
+      });
+    }
+
+    function gameLoop() {
+      if (!gameOver && !gameWin) {
+        update();
+        draw();
+        requestAnimationFrame(gameLoop);
+      }
+    }
+
+    busImg.onload = () => {
+      dashaImg.onload = () => {
+        gameLoop();
+      };
+    };
+  </script>
+</body>
+</html>
